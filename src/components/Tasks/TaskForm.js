@@ -1,14 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
+import { addTask } from "../../services/api"; // Assuming addTask is in localStorageHelpers.js
 
-const TaskForm = ({ onAddTask }) => {
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+const TaskForm = ({ onUpdateTaskList }) => {
+  const [title, setTitle] = useState("");
+  const [description, setDescription] = useState("");
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onAddTask({ title, description, status: 'Pending' });
-    setTitle('');
-    setDescription('');
+
+    // Add the new task to localStorage under the 'Pending' category
+    addTask({ title, description, status: "Pending" });
+
+    // Refresh the task list after adding a new task
+    onUpdateTaskList();
+
+    // Reset form fields
+    setTitle("");
+    setDescription("");
   };
 
   return (

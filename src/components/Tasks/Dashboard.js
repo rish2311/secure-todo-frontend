@@ -1,32 +1,27 @@
-import React, { useEffect, useState } from 'react';
-import { fetchTasks, addTask, updateTask, deleteTask } from '../../api';
-import Task from './Task';
-import TaskForm from './TaskForm';
+import React, { useEffect, useState } from "react";
+import { fetchTasks, addTask } from "../../services/api"; // Import your services
+import TaskForm from "./TaskForm";
+import Task from "./Task";
 
 const Dashboard = () => {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState({
+    pending: [],
+    inProgress: [],
+    completed: [],
+  });
 
   useEffect(() => {
-    const loadTasks = async () => {
-      const { data } = await fetchTasks();
-      setTasks(data);
-    };
-    loadTasks();
+    loadTasks(); // Load tasks on component mount
   }, []);
 
-  const handleAddTask = async (task) => {
-    const { data } = await addTask(task);
-    setTasks([...tasks, data]);
+  const loadTasks = () => {
+    const storedTasks = fetchTasks(); // Fetch from localStorage
+    setTasks(storedTasks); // Update state
   };
 
-  const handleUpdateTask = async (id, updatedTask) => {
-    await updateTask(id, updatedTask);
-    setTasks(tasks.map(task => (task.id === id ? updatedTask : task)));
-  };
-
-  const handleDeleteTask = async (id) => {
-    await deleteTask(id);
-    setTasks(tasks.filter(task => task.id !== id));
+  const handleAddTask = (task) => {
+    addTask(task); // Add new task
+    loadTasks(); // Reload the task list
   };
 
   return (
@@ -34,15 +29,12 @@ const Dashboard = () => {
       <h2>Dashboard</h2>
       <TaskForm onAddTask={handleAddTask} />
       <div>
-        {tasks.map((task) => (
-          <Task
-            key={task.id}
-            task={task}
-            onUpdateTask={handleUpdateTask}
-            onDeleteTask={handleDeleteTask}
-          />
+        <h3>Pending Tasks</h3>
+        {tasks.pending.map((task) => (
+          <Task key={task.id} task={task} />
         ))}
       </div>
+      {/* You can render tasks from other categories similarly */}
     </div>
   );
 };

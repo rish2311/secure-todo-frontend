@@ -1,27 +1,37 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { TextField, Button, Box, Typography, Alert } from "@mui/material";
+import { loginUser } from "../../services/api"; // Assuming loginUser is stored in localStorageHelpers.js
 
 const Login = () => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const { login, loading } = useAuth();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    try {
-      await login({ email, password });
-      navigate('/dashboard');
-    } catch (error) {
-      setError(error.message);
+    setLoading(true);
+
+    // Retrieve stored credentials
+    const storedEmail = localStorage.getItem("email");
+    const storedPassword = localStorage.getItem("password");
+
+    if (email === storedEmail && password === storedPassword) {
+      // Call loginUser function to set the user in localStorage
+      loginUser({ email, password });
+      navigate("/dashboard"); // Navigate to dashboard on successful login
+    } else {
+      setError("Invalid email or password");
     }
+
+    setLoading(false);
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 5 }}>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 5 }}>
       <Typography variant="h4" gutterBottom>
         Login
       </Typography>
@@ -51,7 +61,7 @@ const Login = () => {
           sx={{ mt: 2 }}
           disabled={loading}
         >
-          {loading ? 'Logging in...' : 'Login'}
+          {loading ? "Logging in..." : "Login"}
         </Button>
       </form>
     </Box>
