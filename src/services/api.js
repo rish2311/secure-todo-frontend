@@ -1,60 +1,68 @@
-import axios from 'axios';
+import { v4 as uuidv4 } from "uuid";
 
-const API_URL = 'http://localhost/secure-todo-backend'; // Update with your backend URL
+const localStorageData = {
+  email: "",
+  password: "",
+  isLoggedIn: false,
+  username: "",
+  tasks: {
+    id: uuidv4(),
+    pending: [],
+    inProgress: [],
+    completed: [],
+  },
+};
 
-axios.defaults.withCredentials = true; // For handling cookies (sessions)
+// Function to login the user
+export const loginUser = (data) => {
+  const { email, password } = data;
+  localStorage.setItem("email", email);
+  localStorage.setItem("password", password);
+  localStorage.setItem("isLoggedIn", true);
 
-export const loginUser = async (data) => {
-  try {
-    const response = await axios.post(`${API_URL}/auth.php?action=login`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response.data.message || 'Login failed. Please try again.');
+  // Check if tasks already exist for this user, otherwise set up a new task structure
+  if (!localStorage.getItem("tasks")) {
+    localStorage.setItem("tasks", JSON.stringify(localStorageData.tasks));
   }
 };
 
-export const registerUser = async (data) => {
-  try {
-    const response = await axios.post(`${API_URL}/auth.php?action=signup`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error(error.response.data.message || 'Registration failed. Please try again.');
-  }
+// Function to register a new user
+export const registerUser = (data) => {
+  const { email, password } = data;
+  localStorage.setItem("email", email);
+  localStorage.setItem("password", password);
+  localStorage.setItem("username", data.username);
+  localStorage.setItem("tasks", JSON.stringify(localStorageData.tasks));
 };
 
-// CRUD Operations
-export const fetchTasks = async () => {
-  try {
-    const response = await axios.get(`${API_URL}/tasks.php`);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to fetch tasks. Please try again.');
-  }
+// Function to fetch tasks from localStorage
+export const fetchTasks = () => {
+  const tasks = localStorage.getItem("tasks");
+  return tasks ? JSON.parse(tasks) : localStorageData.tasks;
 };
 
-export const addTask = async (data) => {
-  try {
-    const response = await axios.post(`${API_URL}/tasks.php?action=add`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to add task. Please try again.');
-  }
+// Function to add a task
+export const addTask = (task, category = "pending") => {
+  const tasks = fetchTasks();
+  tasks[category].push({ id: uuidv4(), ...task });
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  return tasks;
 };
 
-export const updateTask = async (id, data) => {
-  try {
-    const response = await axios.put(`${API_URL}/tasks.php?action=update&id=${id}`, data);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to update task. Please try again.');
-  }
+// Function to update a task
+export const updateTask = (id, updatedTask, category) => {
+  const tasks = fetchTasks();
+  tasks[category] = tasks[category]?.map((task) =>
+    task.id === id ? { ...task, ...updatedTask } : task,
+  );
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  return tasks;
 };
 
-export const deleteTask = async (id) => {
-  try {
-    const response = await axios.delete(`${API_URL}/tasks.php?action=delete&id=${id}`);
-    return response.data;
-  } catch (error) {
-    throw new Error('Failed to delete task. Please try again.');
-  }
+// Function to delete a task
+export const deleteTask = (id, category) => {
+  const tasks = fetchTasks();
+  tasks[category] = tasks[category].filter((task) => task.id !== id);
+  localStorage.setItem("tasks", JSON.stringify(tasks));
+  return tasks;
 };

@@ -1,34 +1,47 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { TextField, Button, Box, Typography, Alert } from '@mui/material';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { TextField, Button, Box, Typography, Alert } from "@mui/material";
+import { registerUser } from "../../services/api"; // Assuming registerUser is in localStorageHelpers.js
 
 const SignUp = () => {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
-  const { register, loading } = useAuth();
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError("Passwords do not match");
+      return;
+    }
+
+    setLoading(true);
+
+    // Check if user already exists
+    const existingEmail = localStorage.getItem("email");
+    if (existingEmail === email) {
+      setError("User already exists with this email");
+      setLoading(false);
       return;
     }
 
     try {
-      await register({ username, email, password });
-      navigate('/dashboard');
+      // Register user using localStorage
+      registerUser({ username, email, password });
+      navigate("/"); // Navigate to the dashboard after successful registration
     } catch (error) {
-      setError(error.message);
+      setError("Registration failed. Please try again.");
     }
+
+    setLoading(false);
   };
 
   return (
-    <Box sx={{ maxWidth: 400, mx: 'auto', mt: 5 }}>
+    <Box sx={{ maxWidth: 400, mx: "auto", mt: 5 }}>
       <Typography variant="h4" gutterBottom>
         Sign Up
       </Typography>
@@ -75,7 +88,7 @@ const SignUp = () => {
           sx={{ mt: 2 }}
           disabled={loading}
         >
-          {loading ? 'Registering...' : 'Sign Up'}
+          {loading ? "Registering..." : "Sign Up"}
         </Button>
       </form>
     </Box>
